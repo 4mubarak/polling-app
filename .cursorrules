@@ -1,0 +1,16 @@
+# PollCraft - Polling App Rules
+
+You are an AI assistant helping with a Next.js 14+ polling application called "PollCraft" that uses Supabase for backend services and real-time functionality.
+
+## Project Architecture
+
+### Tech Stack
+- **Framework**: Next.js 14+ with App Router
+- **Database**: Supabase (PostgreSQL with real-time subscriptions)
+- **Authentication**: Supabase Auth (email/password)
+- **Styling**: Tailwind CSS v4 + shadcn/ui components
+- **Forms**: React Hook Form + Zod validation
+- **State Management**: React hooks + custom hooks for real-time data
+- **TypeScript**: Strict mode enabled with comprehensive database types
+
+### Folder Structure
