@@ -3,16 +3,69 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { MoreHorizontal, Eye, Share2, BarChart3 } from "lucide-react"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { MoreHorizontal, Eye, Share2, BarChart3, Edit, Trash2 } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { useToast } from "@/hooks/use-toast"
 import Link from "next/link"
+import { useState } from "react"
 import type { Poll } from "@/types/database"
 
 interface PollListProps {
   polls: Poll[]
 }
 
-export function PollList({ polls }: PollListProps) {
+export function PollList({ polls: initialPolls }: PollListProps) {
+  const [polls, setPolls] = useState(initialPolls)
+  const [deletingPollId, setDeletingPollId] = useState<string | null>(null)
+  const { toast } = useToast()
+
+  const handleDeletePoll = async (pollId: string) => {
+    setDeletingPollId(pollId)
+
+    try {
+      const response = await fetch(`/api/polls/${pollId}`, {
+        method: "DELETE",
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to delete poll")
+      }
+
+      // Remove poll from local state
+      setPolls((prev) => prev.filter((poll) => poll.id !== pollId))
+
+      toast({
+        title: "Poll deleted",
+        description: "Your poll has been successfully deleted.",
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete poll. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setDeletingPollId(null)
+    }
+  }
+
   if (polls.length === 0) {
     return (
       <Card className="text-center py-12">
@@ -63,6 +116,39 @@ export function PollList({ polls }: PollListProps) {
                       Share Link
                     </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href={`/polls/${poll.id}/edit`}>
+                      <Edit className="mr-2 h-4 w-4" />
+                      Edit Poll
+                    </Link>
+                  </DropdownMenuItem>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete Poll
+                      </DropdownMenuItem>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. This will permanently delete your poll and all associated votes.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => handleDeletePoll(poll.id)}
+                          disabled={deletingPollId === poll.id}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          {deletingPollId === poll.id ? "Deleting..." : "Delete"}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>

@@ -11,9 +11,9 @@ import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Card, CardContent } from "@/components/ui/card"
-import { createClient } from "@/lib/supabase/client"
 import { Loader2, Plus, X } from "lucide-react"
 import type { PollOption } from "@/types/database"
+import { useToast } from "@/hooks/use-toast"
 
 export function CreatePollForm() {
   const [title, setTitle] = useState("")
@@ -29,7 +29,7 @@ export function CreatePollForm() {
   const [error, setError] = useState("")
 
   const router = useRouter()
-  const supabase = createClient()
+  const { toast } = useToast()
 
   const addOption = () => {
     const newOption: PollOption = {
@@ -69,35 +69,34 @@ export function CreatePollForm() {
     }
 
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-
-      if (!user) {
-        setError("You must be logged in to create a poll")
-        setLoading(false)
-        return
-      }
-
-      const pollData = {
-        title: title.trim(),
-        description: description.trim() || null,
-        creator_id: user.id,
-        options: validOptions,
-        settings: {
-          allowMultipleVotes,
-          showResults: "after_vote" as const,
-          isPublic,
+      const response = await fetch("/api/polls", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-        expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
-      }
+        body: JSON.stringify({
+          title: title.trim(),
+          description: description.trim() || null,
+          options: validOptions,
+          settings: {
+            allowMultipleVotes,
+            showResults: "after_vote" as const,
+            isPublic,
+          },
+          expires_at: expiresAt || null,
+        }),
+      })
 
-      const { data: poll, error: insertError } = await supabase.from("polls").insert(pollData).select().single()
+      const data = await response.json()
 
-      if (insertError) {
-        setError(insertError.message)
+      if (!response.ok) {
+        setError(data.error || "Failed to create poll")
       } else {
-        router.push(`/polls/${poll.id}`)
+        toast({
+          title: "Poll created successfully!",
+          description: "Your poll is now live and ready for votes.",
+        })
+        router.push("/dashboard")
       }
     } catch (err) {
       setError("An unexpected error occurred")

@@ -32,3 +32,10 @@ CREATE POLICY "Anyone can view anonymous votes" ON anonymous_votes
 
 CREATE POLICY "Anyone can insert anonymous votes" ON anonymous_votes
   FOR INSERT WITH CHECK (true);
+
+-- Additional policies for enhanced security
+CREATE POLICY "Users can only see their own votes" ON votes
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can only delete their own votes" ON votes
+  FOR DELETE USING (auth.uid() = user_id);

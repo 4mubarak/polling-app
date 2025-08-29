@@ -45,3 +45,5 @@ CREATE INDEX IF NOT EXISTS idx_polls_share_id ON polls(share_id);
 CREATE INDEX IF NOT EXISTS idx_votes_poll_id ON votes(poll_id);
 CREATE INDEX IF NOT EXISTS idx_anonymous_votes_poll_id ON anonymous_votes(poll_id);
 CREATE INDEX IF NOT EXISTS idx_polls_created_at ON polls(created_at DESC);
+
+-- Additional updates can be added here if necessary

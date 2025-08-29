@@ -23,6 +23,7 @@ export function PollView({ poll, votes: initialVotes }: PollViewProps) {
   const [error, setError] = useState("")
   const [hasVoted, setHasVoted] = useState(false)
   const [userVote, setUserVote] = useState<number[]>([])
+  const [showVoteConfirmation, setShowVoteConfirmation] = useState(false)
   const { user } = useAuth()
   const supabase = createClient()
 
@@ -106,6 +107,8 @@ export function PollView({ poll, votes: initialVotes }: PollViewProps) {
 
       setUserVote(selectedOptions)
       setHasVoted(true)
+      setShowVoteConfirmation(true)
+      setTimeout(() => setShowVoteConfirmation(false), 3000)
     } catch (err) {
       setError("An unexpected error occurred")
     } finally {
@@ -188,8 +191,11 @@ export function PollView({ poll, votes: initialVotes }: PollViewProps) {
             </div>
           ) : (
             <div className="space-y-4">
-              <Alert>
-                <AlertDescription>
+              <Alert
+                className={`transition-all duration-500 ${showVoteConfirmation ? "bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800" : ""}`}
+              >
+                <AlertDescription className="flex items-center gap-2">
+                  {showVoteConfirmation && <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />}
                   Thank you for voting! You voted for: {userVote.map((index) => poll.options[index].text).join(", ")}
                 </AlertDescription>
               </Alert>
